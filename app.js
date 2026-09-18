@@ -154,7 +154,8 @@ function renderFareRows(fares){
       const node = $("#fareRowTemplate").content.cloneNode(true);
       const code = fare.airline || "?";
       const price = fare.total_price;
-      const tag = med && price <= med*.9 ? "GOOD FARE" : med && price >= med*1.1 ? "HIGH FARE" : snapshot.source.freshness.toUpperCase();
+      const freshness = (snapshot.source.freshness || "demo").toUpperCase();
+      const tag = freshness === "LIVE" ? "VERIFIED NOW" : freshness;
       node.querySelector(".airline-code").textContent = code;
       node.querySelector(".airline-name").textContent = fare.airline_name || airlineNames[code] || code;
       node.querySelector(".flight-number").textContent = (code + (fare.flight_number || "")).trim() + (fare.direct ? " · bay thẳng" : "");
@@ -163,7 +164,13 @@ function renderFareRows(fares){
       node.querySelector(".fare-type").textContent = tag;
       node.querySelector(".fare-note").textContent = snapshot.source.provider || "unknown provider";
       node.querySelector(".price-value").textContent = formatPrice(price);
-      node.querySelector(".price-note").textContent = snapshot.source.freshness === "live" ? "Provider xác nhận live" : snapshot.source.freshness === "cached" ? "Giá cached · cần recheck trước khi mua" : "Giá demo · không dùng để mua";
+      const checkedAt = fare.checked_at || snapshot.generated_at;
+      const checkedLabel = checkedAt ? new Date(checkedAt).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Ho_Chi_Minh"}) : null;
+      node.querySelector(".price-note").textContent = snapshot.source.freshness === "live"
+        ? "Xác minh" + (checkedLabel ? " lúc " + checkedLabel : "") + " · reprice trước thanh toán"
+        : snapshot.source.freshness === "cached"
+          ? "Giá cached · cần kiểm tra live lại"
+          : "Giá demo · không dùng để mua";
       list.appendChild(node);
     });
 }
