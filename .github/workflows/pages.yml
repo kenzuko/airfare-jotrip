@@ -1,8 +1,10 @@
-name: Deploy static site to Pages
+name: Deploy airfare data and static site to Pages
 
 on:
   push:
     branches: ["main"]
+  schedule:
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -23,12 +25,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Refresh fare snapshot
+        env:
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+        run: node scripts/fetch-fares.mjs
+
+      - name: Validate generated data
+        run: |
+          node --check app.js
+          node --check scripts/fetch-fares.mjs
+          node -e "const d=require('./data/fares.json'); if(!Array.isArray(d.fares)) process.exit(1); console.log(d.source, d.fares.length)"
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
           path: "."
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4

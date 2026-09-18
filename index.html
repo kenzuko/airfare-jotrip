@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#07131b">
   <title>PQC Fare Watch - JoTrip Lab</title>
-  <meta name="description" content="Prototype theo dõi giá vé máy bay đi và đến Phú Quốc.">
+  <meta name="description" content="Theo dõi giá vé máy bay đi và đến Phú Quốc theo nguồn dữ liệu và độ mới minh bạch.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -21,7 +21,7 @@
       </div>
       <div class="status-pill">
         <span class="status-dot"></span>
-        Prototype
+        <span id="topStatus">Đang tải dữ liệu</span>
       </div>
     </header>
 
@@ -29,12 +29,12 @@
       <div class="hero-copy">
         <p class="eyebrow">AIRFARE INTELLIGENCE · PHÚ QUỐC</p>
         <h1>Giá vé vào đảo, nhìn là hiểu.</h1>
-        <p class="lede">Theo dõi mức giá, độ biến động và ngày rẻ hơn cho các đường bay Phú Quốc. Bản này đang dùng dữ liệu demo để kiểm tra giao diện và logic.</p>
+        <p class="lede" id="sourceNote">Đang đọc snapshot giá vé và kiểm tra độ mới của dữ liệu.</p>
       </div>
       <div class="hero-metric">
-        <span>Giá thấp nhất đang thấy</span>
-        <strong id="heroLowest">1.090.000đ</strong>
-        <small id="heroRoute">SGN → PQC · 23/09</small>
+        <span>Giá thấp nhất ngày chọn</span>
+        <strong id="heroLowest">-</strong>
+        <small id="heroRoute">SGN → PQC</small>
       </div>
     </section>
 
@@ -63,7 +63,7 @@
 
       <div class="date-field">
         <label for="departDate">Ngày đi</label>
-        <input id="departDate" type="date" value="2026-09-23">
+        <input id="departDate" type="date">
       </div>
 
       <button class="primary-btn" id="searchBtn">Xem giá</button>
@@ -71,30 +71,30 @@
 
     <section class="signal-grid">
       <article class="signal card">
-        <span class="signal-label">Mức giá hôm nay</span>
+        <span class="signal-label">Mức giá ngày chọn</span>
         <div class="signal-row">
-          <strong id="todayLevel">Khá tốt</strong>
-          <span class="badge good">GOOD FARE</span>
+          <strong id="todayLevel">-</strong>
+          <span class="badge neutral" id="todayBadge">NO DATA</span>
         </div>
-        <p id="todayLevelNote">Thấp hơn mức trung vị 30 ngày khoảng 11%.</p>
+        <p id="todayLevelNote">So với các ngày lân cận trên cùng chặng.</p>
       </article>
 
       <article class="signal card">
-        <span class="signal-label">Xu hướng 24 giờ</span>
+        <span class="signal-label">Độ phủ ngày chọn</span>
         <div class="signal-row">
-          <strong id="trendValue">+6,4%</strong>
-          <span class="badge warn">ĐANG TĂNG</span>
+          <strong id="coverageValue">-</strong>
+          <span class="badge neutral" id="coverageBadge">SNAPSHOT</span>
         </div>
-        <p>Giá thấp nhất có dấu hiệu tăng nhanh ở nhóm chuyến tối.</p>
+        <p id="coverageNote">Số fare record nhìn thấy trong snapshot hiện tại.</p>
       </article>
 
       <article class="signal card">
-        <span class="signal-label">Khoảng giá thấy được</span>
+        <span class="signal-label">Khoảng giá ngày chọn</span>
         <div class="signal-row">
-          <strong id="rangeValue">1,09 - 2,48tr</strong>
-          <span class="badge neutral">DEMO</span>
+          <strong id="rangeValue">-</strong>
+          <span class="badge neutral" id="freshnessBadge">LOADING</span>
         </div>
-        <p>So sánh trên cùng chặng, cùng ngày, ưu tiên chuyến bay thẳng.</p>
+        <p id="rangeNote">Không suy diễn giá live từ dữ liệu cached.</p>
       </article>
     </section>
 
@@ -103,11 +103,11 @@
         <div class="section-head">
           <div>
             <p class="eyebrow">FARE BOARD</p>
-            <h2 id="boardTitle">SGN → PQC · 23/09</h2>
+            <h2 id="boardTitle">SGN → PQC</h2>
           </div>
           <div class="freshness">
             <span>Freshness</span>
-            <strong>DEMO</strong>
+            <strong id="freshnessText">LOADING</strong>
           </div>
         </div>
 
@@ -118,7 +118,9 @@
           <button class="filter" data-filter="evening">Buổi tối</button>
         </div>
 
-        <div class="fare-list" id="fareList"></div>
+        <div class="fare-list" id="fareList">
+          <div class="empty-state">Đang tải dữ liệu...</div>
+        </div>
       </article>
 
       <aside class="side-stack">
@@ -131,8 +133,8 @@
           </div>
           <div class="mini-chart" id="miniChart"></div>
           <div class="legend-row">
-            <span><i class="legend best"></i>Giá tốt</span>
-            <span><i class="legend normal"></i>Bình thường</span>
+            <span><i class="legend best"></i>Thấp nhất</span>
+            <span><i class="legend normal"></i>Có dữ liệu</span>
           </div>
         </article>
 
@@ -140,17 +142,17 @@
           <p class="eyebrow">QUICK WATCH</p>
           <h2>Cần chú ý</h2>
           <div class="watch-item">
-            <span class="watch-icon">↑</span>
+            <span class="watch-icon">◎</span>
             <div>
-              <strong>Cuối tuần tăng giá</strong>
-              <p>Chặng SGN → PQC ngày 25-27/09 đang cao hơn nhóm giữa tuần.</p>
+              <strong id="watchTitle1">Đang phân tích snapshot</strong>
+              <p id="watchText1">Chỉ đưa cảnh báo khi dữ liệu hiện có đủ để kết luận.</p>
             </div>
           </div>
           <div class="watch-item">
-            <span class="watch-icon">◎</span>
+            <span class="watch-icon">↗</span>
             <div>
-              <strong>Khung sáng đang dễ mua hơn</strong>
-              <p>Các chuyến trước 10:00 có mức giá demo thấp hơn nhóm sau 17:00.</p>
+              <strong id="watchTitle2">Chưa có lịch sử giá</strong>
+              <p id="watchText2">Muốn tính tăng/giảm 24 giờ cần lưu nhiều snapshot theo thời gian.</p>
             </div>
           </div>
         </article>
@@ -160,18 +162,18 @@
     <section class="card methodology">
       <div>
         <p class="eyebrow">DATA DISCIPLINE</p>
-        <h2>Không đánh tráo giá cached thành live.</h2>
+        <h2>Giá nào là live, cached hay demo phải nói đúng.</h2>
       </div>
       <div class="method-grid">
-        <div><span>LIVE</span><p>Giá được provider xác nhận ở phiên tìm kiếm hiện tại.</p></div>
-        <div><span>CACHED</span><p>Giá đã được thấy trước đó, dùng cho lịch và xu hướng.</p></div>
-        <div><span>DEMO</span><p>Dữ liệu mô phỏng chỉ để kiểm tra UI, không dùng để mua vé.</p></div>
+        <div><span>LIVE</span><p>Provider xác nhận lại trong phiên tìm kiếm hiện tại.</p></div>
+        <div><span>CACHED</span><p>Giá đã được thấy trước đó, phù hợp cho calendar và fare intelligence.</p></div>
+        <div><span>DEMO</span><p>Dữ liệu mô phỏng để test UI, tuyệt đối không dùng như giá bán.</p></div>
       </div>
     </section>
 
     <footer>
-      <span>JoTrip Lab · Airfare prototype</span>
-      <span id="lastUpdated">Cập nhật demo: 18/09/2026 20:20</span>
+      <span>JoTrip Lab · Airfare intelligence prototype</span>
+      <span id="lastUpdated">Đang đọc thời điểm cập nhật...</span>
     </footer>
   </main>
 
@@ -194,7 +196,7 @@
       </div>
       <div class="price">
         <strong class="price-value"></strong>
-        <small>1 chiều · đã gồm phí demo</small>
+        <small class="price-note"></small>
       </div>
     </article>
   </template>
